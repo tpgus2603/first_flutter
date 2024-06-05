@@ -11,10 +11,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-
     return ChangeNotifierProvider(
-      create: (context) => MyAppState(), // 데이터를 담는 상태를 만듬 
+      create: (context) => MyAppState(), // 데이터를 담는 상태를 만듬
       child: MaterialApp(
         title: 'Namer App',
         theme: ThemeData(
@@ -29,13 +27,16 @@ class MyApp extends StatelessWidget {
 
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
-   void getNext() {
+
+  void getNext() {
     current = WordPair.random();
     notifyListeners();
   }
+
   var favorites = <WordPair>[];
 
   void toggleFavorite() {
+    //좋아요 버튼 누르면
     if (favorites.contains(current)) {
       favorites.remove(current);
     } else {
@@ -45,45 +46,111 @@ class MyAppState extends ChangeNotifier {
   }
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   @override
-  Widget build(BuildContext context) { //보여줄때 build함수 씀 
-    var appState = context.watch<MyAppState>(); //watch :변화가 있을때 알려달란 함수 
-    var pair = appState.current;                 // ← Add this.
-     IconData icon;
-    if (appState.favorites.contains(pair)) {
-      icon = Icons.favorite;
-    } else {
-      icon = Icons.favorite_border;
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  var selectedIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget page;
+    switch (selectedIndex) {
+      case 0:
+        page = GeneratorPage();
+        break;
+      case 1:
+        page = Placeholder();
+        break;
+      default:
+        throw UnimplementedError('no widget for $selectedIndex');
     }
-    return Scaffold(          
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,  // ← Add this.
-          children: [
-            Text('A random AWESOME idea:'),
-            BigCard(pair: pair),                // ← Change to this.
-            Row(
-              mainAxisSize: MainAxisSize.min,   // ← Add this.
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    appState.toggleFavorite();
+
+    return LayoutBuilder(
+      builder: (context,constraints) {
+        return Scaffold(
+          body: Row(
+            //하나의 row로 묶고 column두개
+            children: [
+              SafeArea(
+                child: NavigationRail(
+                  extended: constraints.maxWidth >= 600,
+                  destinations: [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.home),
+                      label: Text('Home'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.favorite),
+                      label: Text('Favorites'),
+                    ),
+                  ],
+                  selectedIndex: selectedIndex, // ← Change to this.
+                  onDestinationSelected: (value) {
+                    // ↓ Replace print with this.
+                    setState(() {
+                      selectedIndex = value;
+                    });
                   },
-                  icon: Icon(icon),
-                  label: Text('Like'),
                 ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    appState.getNext();  // ← This instead of print().
-                  },
-                  child: Text('Next'),
+              ),
+              Expanded(
+                //오른쪽
+                child: Container(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  child: page,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        );
+      }
+    );
+  }
+}
+
+class GeneratorPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    var pair = appState.current;
+
+    IconData icon;
+    if (appState.favorites.contains(pair)) {
+      icon = Icons.favorite; //색깔 칠하기
+    } else {
+      icon = Icons.favorite_border; //비우기
+    }
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          BigCard(pair: pair),
+          SizedBox(height: 10),
+          Row(
+            //하나의 row로 묶기
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  appState.toggleFavorite();
+                },
+                icon: Icon(icon),
+                label: Text('Like'),
+              ),
+              SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: () {
+                  appState.getNext();
+                },
+                child: Text('Next'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -102,19 +169,17 @@ class BigCard extends StatelessWidget {
     final theme = Theme.of(context);
     final style = theme.textTheme.displayMedium!.copyWith(
       color: theme.colorScheme.onPrimary,
-    ); 
+    );
     return Card(
-      color: theme.colorScheme.primary,    // ← And also this.
+      color: theme.colorScheme.primary, // ← And also this.
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Text(
           pair.asLowerCase,
           style: style,
           semanticsLabel: "${pair.first} ${pair.second}",
-        ),    
+        ),
       ),
     );
   }
 }
-
-
