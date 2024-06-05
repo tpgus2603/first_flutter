@@ -11,6 +11,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+
     return ChangeNotifierProvider(
       create: (context) => MyAppState(), // 데이터를 담는 상태를 만듬 
       child: MaterialApp(
@@ -37,20 +39,53 @@ class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) { //보여줄때 build함수 씀 
     var appState = context.watch<MyAppState>(); //watch :변화가 있을때 알려달란 함수 
-
+    var pair = appState.current;                 // ← Add this.
     return Scaffold(          
-      body: Column(
-        children: [
-          Text('A random idea:'),
-          Text(appState.current.asLowerCase),
-          ElevatedButton(
-            onPressed: () {
-              appState.getNext();  // ← This instead of print().
-            },
-            child: Text('Next'),
-          ),
-        ],
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,  // ← Add this.
+          children: [
+            Text('A random AWESOME idea:'),
+            BigCard(pair: pair),                // ← Change to this.
+            ElevatedButton(
+              onPressed: () {
+                appState.getNext();  // ← This instead of print().
+              },
+              child: Text('Next'),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
+class BigCard extends StatelessWidget {
+  const BigCard({
+    super.key,
+    required this.pair,
+  });
+
+  final WordPair pair;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final style = theme.textTheme.displayMedium!.copyWith(
+      color: theme.colorScheme.onPrimary,
+    ); 
+    return Card(
+      color: theme.colorScheme.primary,    // ← And also this.
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Text(
+          pair.asLowerCase,
+          style: style,
+          semanticsLabel: "${pair.first} ${pair.second}",
+        ),    
+      ),
+    );
+  }
+}
+
+
