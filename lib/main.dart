@@ -33,6 +33,16 @@ class MyAppState extends ChangeNotifier {
     current = WordPair.random();
     notifyListeners();
   }
+  var favorites = <WordPair>[];
+
+  void toggleFavorite() {
+    if (favorites.contains(current)) {
+      favorites.remove(current);
+    } else {
+      favorites.add(current);
+    }
+    notifyListeners();
+  }
 }
 
 class MyHomePage extends StatelessWidget {
@@ -40,6 +50,12 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) { //보여줄때 build함수 씀 
     var appState = context.watch<MyAppState>(); //watch :변화가 있을때 알려달란 함수 
     var pair = appState.current;                 // ← Add this.
+     IconData icon;
+    if (appState.favorites.contains(pair)) {
+      icon = Icons.favorite;
+    } else {
+      icon = Icons.favorite_border;
+    }
     return Scaffold(          
       body: Center(
         child: Column(
@@ -47,11 +63,24 @@ class MyHomePage extends StatelessWidget {
           children: [
             Text('A random AWESOME idea:'),
             BigCard(pair: pair),                // ← Change to this.
-            ElevatedButton(
-              onPressed: () {
-                appState.getNext();  // ← This instead of print().
-              },
-              child: Text('Next'),
+            Row(
+              mainAxisSize: MainAxisSize.min,   // ← Add this.
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    appState.toggleFavorite();
+                  },
+                  icon: Icon(icon),
+                  label: Text('Like'),
+                ),
+                SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    appState.getNext();  // ← This instead of print().
+                  },
+                  child: Text('Next'),
+                ),
+              ],
             ),
           ],
         ),
